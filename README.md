@@ -33,6 +33,11 @@ feedbacks = [
 - 🏭 **Production-ready** - Not just research, built for real applications
 - 🌐 **Cross-domain** - ITSM, code generation, reasoning tasks, chatbots
 
+## 📚 Documentation
+
+- **[Introduction to RLAF](docs/articles/introduction-to-rlaf.md)** - Comprehensive article on RLAF's innovations and how it builds on ARPO, Open-AgentRL, and KAT-Dev
+- **[Full Documentation](docs/)** - Guides, API reference, and more
+
 ## 🚀 Quick Start
 
 ### Installation
