@@ -104,24 +104,93 @@ class CriticAgent(BaseAgent):
     def _build_critique_prompt(
         self, actor_response: AgentResponse, context: Dict[str, Any]
     ) -> str:
-        """Build prompt for critique generation."""
+        """
+        Build prompt for critique generation.
+
+        NEW (2025): Enhanced with chain-of-thought reasoning for better
+        consistency and reduced bias.
+        """
         perspective_instructions = {
-            "accuracy": "Evaluate if the response is factually correct and achieves the task goal.",
-            "reasoning": "Assess the logical reasoning and thought process. Check for coherence and soundness.",
-            "tool_use": "Evaluate tool usage: Are tools called appropriately? Is there unnecessary tool usage?",
-            "code_quality": "Review code quality: readability, efficiency, best practices, and potential bugs.",
-            "policy": "Check policy compliance: SLA requirements, security guidelines, business rules.",
-            "speed": "Evaluate response efficiency: Is it unnecessarily verbose or slow?",
-            "safety": "Assess safety: Are there harmful outputs, security risks, or ethical concerns?",
+            "accuracy": {
+                "goal": "Evaluate if the response is factually correct and achieves the task goal.",
+                "steps": [
+                    "Identify the key claims or assertions in the response",
+                    "For each claim, assess the evidence and correctness",
+                    "Check if the response fully addresses the task requirements",
+                    "Consider potential errors, omissions, or inaccuracies",
+                ],
+            },
+            "reasoning": {
+                "goal": "Assess the logical reasoning and thought process.",
+                "steps": [
+                    "Examine the logical structure of the response",
+                    "Check for coherence and consistency in reasoning",
+                    "Identify any logical fallacies or gaps",
+                    "Evaluate if conclusions follow from premises",
+                ],
+            },
+            "tool_use": {
+                "goal": "Evaluate tool usage effectiveness and efficiency.",
+                "steps": [
+                    "List all tool calls made in the response",
+                    "Assess if each tool call was necessary and appropriate",
+                    "Check for redundant or missing tool calls",
+                    "Evaluate the quality of tool call parameters",
+                ],
+            },
+            "code_quality": {
+                "goal": "Review code quality, readability, and best practices.",
+                "steps": [
+                    "Analyze code structure and organization",
+                    "Check for adherence to best practices and conventions",
+                    "Identify potential bugs, edge cases, or inefficiencies",
+                    "Assess readability and maintainability",
+                ],
+            },
+            "policy": {
+                "goal": "Check compliance with policies, SLAs, and business rules.",
+                "steps": [
+                    "Identify relevant policies and requirements",
+                    "Check if the response meets each requirement",
+                    "Assess risk of policy violations or SLA breaches",
+                    "Consider security and compliance implications",
+                ],
+            },
+            "speed": {
+                "goal": "Evaluate response efficiency and performance.",
+                "steps": [
+                    "Assess response length and verbosity",
+                    "Check for unnecessary complexity or redundancy",
+                    "Evaluate computational efficiency (if applicable)",
+                    "Consider if the response could be more concise",
+                ],
+            },
+            "safety": {
+                "goal": "Assess safety, security, and ethical concerns.",
+                "steps": [
+                    "Scan for potentially harmful or dangerous content",
+                    "Check for security vulnerabilities or risks",
+                    "Assess ethical implications of the response",
+                    "Consider potential misuse or negative impacts",
+                ],
+            },
         }
 
-        instruction = perspective_instructions.get(
-            self.perspective, "Evaluate overall quality."
+        instruction_data = perspective_instructions.get(
+            self.perspective, {
+                "goal": "Evaluate overall quality.",
+                "steps": ["Analyze the response comprehensively"],
+            }
+        )
+
+        steps_text = "\n".join(
+            f"   {i+1}. {step}" for i, step in enumerate(instruction_data["steps"])
         )
 
         return f"""You are a specialized critic agent focusing on: {self.perspective}
 
-{instruction}
+**Your Goal:**
+{instruction_data["goal"]}
 
 **Context/Task:**
 {json.dumps(context, indent=2)}
@@ -129,16 +198,37 @@ class CriticAgent(BaseAgent):
 **Actor's Response:**
 {actor_response.content if actor_response else "No response"}
 
-**Your Task:**
-Provide structured feedback in JSON format:
+**Your Evaluation Process (think step-by-step):**
+
+STEP 1: Understand the Requirements
+- What was the actor supposed to accomplish?
+- What are the success criteria for this task?
+
+STEP 2: Analyze the Response ({self.perspective} perspective)
+{steps_text}
+
+STEP 3: Consider Strengths and Weaknesses
+- What did the response do well?
+- What could be improved?
+- Are there any critical issues?
+
+STEP 4: Provide Your Structured Feedback
+
+Please provide your evaluation in JSON format:
 {{
     "score": <float 0.0-1.0>,
-    "reasoning": "<your detailed analysis>",
-    "suggestions": ["<improvement 1>", "<improvement 2>", ...],
-    "confidence": <float 0.0-1.0>
+    "reasoning": "<your detailed step-by-step analysis following the process above>",
+    "suggestions": ["<specific, actionable improvement 1>", "<specific, actionable improvement 2>", ...],
+    "confidence": <float 0.0-1.0 - how confident are you in this evaluation>
 }}
 
-Be specific, actionable, and constructive."""
+Important:
+- Be specific and provide concrete examples
+- Base your evaluation on observable facts
+- Consider edge cases and potential issues
+- Provide actionable suggestions for improvement
+
+Think carefully through each step before providing your final evaluation."""
 
     async def _claude_critique(self, prompt: str) -> str:
         """Generate critique using Claude."""

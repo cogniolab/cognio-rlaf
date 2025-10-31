@@ -6,6 +6,7 @@ Welcome to the RLAF (Reinforcement Learning from Agentic Feedback) documentation
 
 ### Articles
 - [**Introduction to RLAF**](articles/introduction-to-rlaf.md) - Comprehensive overview of RLAF, its innovations, and how it builds on ARPO, Open-AgentRL, and KAT-Dev
+- [**Latest RLAIF/RLAF Developments (2024-2025)**](articles/latest-rlaif-developments-2024-2025.md) - 🆕 Cutting-edge research breakthroughs including Direct-RLAIF, RLTHF, Chain-of-Thought critics, Constitutional AI, self-improvement, and more
 
 ### Guides
 - [Quick Start Guide](../README.md#-quick-start) - Get started in 30 seconds

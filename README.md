@@ -36,6 +36,7 @@ feedbacks = [
 ## 📚 Documentation
 
 - **[Introduction to RLAF](docs/articles/introduction-to-rlaf.md)** - Comprehensive article on RLAF's innovations and how it builds on ARPO, Open-AgentRL, and KAT-Dev
+- **[Latest RLAIF/RLAF Developments (2024-2025)](docs/articles/latest-rlaif-developments-2024-2025.md)** - 🆕 Cutting-edge techniques including Direct-RLAIF, RLTHF, Chain-of-Thought critics, and more
 - **[Full Documentation](docs/)** - Guides, API reference, and more
 
 ## 🚀 Quick Start
@@ -161,6 +162,17 @@ Input Task
 [Algorithm] updates policy (ARPO/GRPO-TCR/PPO/DPO)
 ```
 
+## ✨ What's New (2024-2025)
+
+RLAF now integrates the latest breakthroughs in reinforcement learning from AI feedback:
+
+- 🚀 **Direct-RLAIF (d-RLAIF)**: Skip reward model training, query critics directly for better accuracy
+- 🎯 **RLTHF**: Human-in-the-loop with only 6-7% annotation cost (93% savings!)
+- 🧠 **Chain-of-Thought Critics**: Enhanced prompting for more consistent, unbiased feedback
+- 🔄 **Online Iterative Learning**: Continuous adaptation from production feedback (coming soon)
+
+👉 **[Read about all 2024-2025 developments →](docs/articles/latest-rlaif-developments-2024-2025.md)**
+
 ## 🔬 Algorithms
 
 ### ARPO: Adaptive Reinforcement Policy Optimization
@@ -176,7 +188,8 @@ Key innovation: Entropy-based adaptive rollout
 config = TrainingConfig(
     algorithm="arpo",
     entropy_threshold=0.8,
-    adaptive_rollout=True
+    adaptive_rollout=True,
+    direct_feedback=True,  # NEW: Direct-RLAIF mode
 )
 ```
 
@@ -193,7 +206,9 @@ Key innovation: Deliberative reasoning before tool calls
 config = TrainingConfig(
     algorithm="grpo-tcr",
     tool_call_reasoning=True,
-    deliberative_mode=True
+    deliberative_mode=True,
+    use_human_feedback=True,  # NEW: RLTHF support
+    human_feedback_threshold=0.6,  # Request human input when consensus < 60%
 )
 ```
 

@@ -26,6 +26,21 @@ class TrainingConfig(BaseConfig):
     # Algorithm selection
     algorithm: str = "arpo"  # arpo, grpo-tcr, kat, ppo, dpo
 
+    # Direct-RLAIF mode (2024-2025 research)
+    direct_feedback: bool = False  # Skip reward model, query critics directly
+    feedback_frequency: str = "every_step"  # How often to query critics in direct mode
+
+    # RLTHF - Targeted Human Feedback (2025)
+    use_human_feedback: bool = False  # Enable human-in-the-loop
+    human_feedback_threshold: float = 0.6  # Request human input if consensus < threshold
+    human_feedback_budget: float = 0.07  # Max fraction of human annotations (7%)
+    human_feedback_mode: str = "uncertainty"  # uncertainty, random, critical
+
+    # Online Iterative RLHF (2025)
+    online_mode: bool = False  # Enable continuous learning from production
+    update_frequency: str = "hourly"  # Update interval for online mode
+    feedback_buffer_size: int = 1000  # Min feedback before update
+
     # ARPO-specific (from July 2025 paper)
     entropy_threshold: float = 0.8  # High uncertainty trigger
     adaptive_rollout: bool = True
@@ -81,6 +96,7 @@ class RLAFTrainer:
         actor: BaseAgent,
         critics: Union[BaseAgent, List[BaseAgent]],
         config: Optional[TrainingConfig] = None,
+        human_provider: Optional[Any] = None,
     ):
         """
         Initialize RLAF trainer.
@@ -89,19 +105,32 @@ class RLAFTrainer:
             actor: The agent being trained
             critics: Single critic or ensemble of critics
             config: Training configuration
+            human_provider: Optional human feedback provider for RLTHF
         """
         self.actor = actor
         self.critics = critics if isinstance(critics, list) else [critics]
         self.config = config or TrainingConfig()
+        self.human_provider = human_provider
 
         self.iteration = 0
         self.training_history: List[Dict[str, Any]] = []
+        self.human_feedback_count = 0  # Track human annotations used
 
         logger.info(
             f"Initialized RLAFTrainer with {self.config.algorithm} algorithm"
         )
         logger.info(f"Actor: {self.actor.name}")
         logger.info(f"Critics: {[c.name for c in self.critics]}")
+
+        # Log new features
+        if self.config.direct_feedback:
+            logger.info("Direct-RLAIF mode enabled (no reward model)")
+        if self.config.use_human_feedback:
+            logger.info(
+                f"RLTHF enabled (budget: {self.config.human_feedback_budget*100:.1f}%)"
+            )
+        if self.config.online_mode:
+            logger.info(f"Online mode enabled (updates: {self.config.update_frequency})")
 
     async def train(self, dataset: List[Dict[str, Any]]) -> Dict[str, Any]:
         """
@@ -201,10 +230,12 @@ class RLAFTrainer:
 
         Each response is evaluated by ALL critics, providing
         multi-perspective feedback.
+
+        NEW (2025): Supports RLTHF - requests human feedback when needed.
         """
         all_feedback = []
 
-        for response, item in zip(responses, batch):
+        for idx, (response, item) in enumerate(zip(responses, batch)):
             feedback_for_response = []
 
             # Evaluate with each critic
@@ -218,6 +249,23 @@ class RLAFTrainer:
                     critic_response, critic.name
                 )
                 feedback_for_response.append(feedback)
+
+            # RLTHF: Check if human feedback is needed
+            if self.config.use_human_feedback and self.human_provider:
+                should_request_human = self._should_request_human_feedback(
+                    feedback_for_response, idx
+                )
+
+                if should_request_human:
+                    human_feedback = await self._get_human_feedback(
+                        response, item, feedback_for_response
+                    )
+                    if human_feedback:
+                        feedback_for_response.append(human_feedback)
+                        self.human_feedback_count += 1
+                        logger.info(
+                            f"Human feedback requested ({self.human_feedback_count} total)"
+                        )
 
             all_feedback.append(feedback_for_response)
 
@@ -387,3 +435,73 @@ class RLAFTrainer:
         """Load training checkpoint."""
         logger.info(f"Loading checkpoint from {path}")
         # Placeholder: Load actor weights, optimizer state
+
+    def _should_request_human_feedback(
+        self, feedback_list: List[Feedback], iteration_idx: int
+    ) -> bool:
+        """
+        Determine if human feedback should be requested (RLTHF).
+
+        Uses uncertainty-based strategy: request human input when
+        critic consensus is low.
+        """
+        if not self.config.use_human_feedback:
+            return False
+
+        # Check if we've exceeded budget
+        total_samples = self.iteration * self.config.batch_size + iteration_idx + 1
+        human_ratio = self.human_feedback_count / total_samples if total_samples > 0 else 0
+
+        if human_ratio >= self.config.human_feedback_budget:
+            return False  # Budget exhausted
+
+        # Calculate consensus level
+        if len(feedback_list) < 2:
+            return False
+
+        scores = [f.score for f in feedback_list]
+        avg_score = sum(scores) / len(scores)
+        variance = sum((s - avg_score) ** 2 for s in scores) / len(scores)
+        consensus = 1.0 - min(1.0, variance * 2)  # Low variance = high consensus
+
+        # Request human feedback if consensus is below threshold
+        return consensus < self.config.human_feedback_threshold
+
+    async def _get_human_feedback(
+        self,
+        response: AgentResponse,
+        context: Dict[str, Any],
+        ai_feedback: List[Feedback],
+    ) -> Optional[Feedback]:
+        """
+        Request human feedback for a response (RLTHF).
+
+        Args:
+            response: Actor's response
+            context: Task context
+            ai_feedback: Existing AI feedback
+
+        Returns:
+            Human feedback or None
+        """
+        if not self.human_provider:
+            return None
+
+        try:
+            # Request human evaluation
+            human_eval = await self.human_provider.request_feedback(
+                response=response,
+                context=context,
+                ai_feedback=ai_feedback,
+            )
+
+            return Feedback(
+                critic_name="human",
+                score=human_eval.get("score", 0.5),
+                reasoning=human_eval.get("reasoning", "Human evaluation"),
+                suggestions=human_eval.get("suggestions", []),
+                confidence=1.0,  # Human feedback has highest confidence
+            )
+        except Exception as e:
+            logger.error(f"Failed to get human feedback: {e}")
+            return None
