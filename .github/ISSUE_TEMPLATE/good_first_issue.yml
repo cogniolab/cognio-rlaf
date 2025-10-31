@@ -1,0 +1,86 @@
+name: Good First Issue
+description: Create a beginner-friendly issue for new contributors
+title: "[Good First Issue]: "
+labels: ["good first issue", "help wanted"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This template is for maintainers to create beginner-friendly issues.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Issue Description
+      description: Clear description of what needs to be done
+      placeholder: Describe the task...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: What area of the codebase is this in?
+      options:
+        - Documentation
+        - Tests
+        - Examples
+        - Core functionality
+        - Benchmarks
+        - CI/CD
+    validations:
+      required: true
+
+  - type: dropdown
+    id: difficulty
+    attributes:
+      label: Difficulty
+      description: Estimated difficulty level
+      options:
+        - Easy (1-2 hours)
+        - Medium (3-5 hours)
+        - Challenging (1-2 days)
+    validations:
+      required: true
+
+  - type: textarea
+    id: requirements
+    attributes:
+      label: Requirements
+      description: What needs to be done?
+      placeholder: |
+        - [ ] Task 1
+        - [ ] Task 2
+        - [ ] Task 3
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context & Resources
+      description: Links to relevant files, documentation, or examples
+      placeholder: |
+        - File to modify: `path/to/file.py`
+        - Related docs: [link]
+        - Example: [link]
+
+  - type: textarea
+    id: hints
+    attributes:
+      label: Hints & Tips
+      description: Any helpful hints for someone tackling this issue
+      placeholder: You may want to start by looking at...
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria
+      description: How do we know when this issue is complete?
+      placeholder: |
+        - [ ] Tests pass
+        - [ ] Documentation updated
+        - [ ] Code follows style guide
+    validations:
+      required: true

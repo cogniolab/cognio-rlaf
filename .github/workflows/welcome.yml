@@ -1,0 +1,55 @@
+name: Welcome New Contributors
+
+on:
+  issues:
+    types: [opened]
+  pull_request_target:
+    types: [opened]
+
+jobs:
+  welcome:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Welcome new contributor
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const creator = context.payload.sender.login;
+            const issue_number = context.issue.number;
+            const is_pr = !!context.payload.pull_request;
+            const type = is_pr ? 'pull request' : 'issue';
+
+            // Check if this is the user's first contribution
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              creator: creator,
+              state: 'all'
+            });
+
+            const userContributions = issues.length;
+
+            if (userContributions === 1) {
+              const message = is_pr
+                ? `🎉 **Welcome to RLAF!** Thank you for your first pull request, @${creator}!\n\n` +
+                  `We're excited to have you as a contributor. A maintainer will review your PR soon.\n\n` +
+                  `**While you wait:**\n` +
+                  `- Make sure all CI checks pass\n` +
+                  `- Review our [Contributing Guidelines](https://github.com/${context.repo.owner}/${context.repo.repo}/blob/main/CONTRIBUTING.md)\n` +
+                  `- Join our community discussions\n\n` +
+                  `**Questions?** Feel free to ask in the comments!`
+                : `👋 **Welcome to RLAF!** Thanks for opening your first issue, @${creator}!\n\n` +
+                  `We appreciate you taking the time to report this. A maintainer will respond soon.\n\n` +
+                  `**In the meantime:**\n` +
+                  `- Check out our [documentation](https://github.com/${context.repo.owner}/${context.repo.repo}/tree/main/docs)\n` +
+                  `- Browse [existing issues](https://github.com/${context.repo.owner}/${context.repo.repo}/issues)\n` +
+                  `- Join our community discussions\n\n` +
+                  `If you're interested in contributing code, check out our [good first issues](https://github.com/${context.repo.owner}/${context.repo.repo}/labels/good%20first%20issue)!`;
+
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue_number,
+                body: message
+              });
+            }

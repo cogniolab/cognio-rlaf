@@ -134,7 +134,7 @@ pytest
 
 ## Code of Conduct
 
-Be respectful and constructive. We're building this together!
+This project adheres to the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code. Please report unacceptable behavior to [moses@cogniolab.com](mailto:moses@cogniolab.com).
 
 ---
 

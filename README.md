@@ -2,6 +2,10 @@
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![CI](https://github.com/cogniolab/cognio-rlaf/workflows/CI/badge.svg)](https://github.com/cogniolab/cognio-rlaf/actions)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
 
 **A unified framework for training AI agents using multi-perspective critic ensembles.**
 
@@ -369,13 +373,30 @@ python benchmarks/visualize.py
 
 ## 🤝 Contributing
 
-We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+We welcome contributions from everyone! Whether you're fixing a typo, adding tests, or implementing new features, your contributions are valued.
 
-Key areas:
-- New critic perspectives
-- Additional RL algorithms
-- Domain-specific examples
-- Performance optimizations
+### Quick Start for Contributors
+
+- **New to the project?** Check out our [Good First Issues Guide](docs/GOOD_FIRST_ISSUES.md)
+- **Ready to contribute?** Read our [Contributing Guidelines](CONTRIBUTING.md)
+- **Found a security issue?** See our [Security Policy](SECURITY.md)
+- **Want to report a bug?** Use our [Bug Report Template](.github/ISSUE_TEMPLATE/bug_report.yml)
+- **Have a feature idea?** Use our [Feature Request Template](.github/ISSUE_TEMPLATE/feature_request.yml)
+
+### Areas We Need Help
+
+- **New critic perspectives** - Domain-specific critics (healthcare, finance, legal)
+- **Additional RL algorithms** - REINFORCE, A2C, SAC variants
+- **Domain-specific examples** - Real-world use cases and tutorials
+- **Performance optimizations** - Parallel processing, memory efficiency
+- **Documentation** - Guides, tutorials, API docs
+- **Tests** - Unit tests, integration tests, benchmarks
+
+### Recognition
+
+All contributors are recognized in our release notes and will be featured in our Contributors Hall of Fame.
+
+**Join us in making AI agents smarter!** 🚀
 
 ## 📝 Citation
 

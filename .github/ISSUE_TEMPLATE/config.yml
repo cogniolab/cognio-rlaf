@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Ask a Question
+    url: https://github.com/cogniolab/cognio-rlaf/discussions
+    about: Ask questions and discuss with the community
+  - name: RLAF Documentation
+    url: https://github.com/cogniolab/cognio-rlaf/tree/main/docs
+    about: Read the documentation for usage guides and examples
+  - name: Email Support
+    url: mailto:moses@cogniolab.com
+    about: Contact the maintainers directly for sensitive issues
